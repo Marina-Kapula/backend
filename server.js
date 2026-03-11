@@ -46,9 +46,10 @@ app.get("/api/sculptures", (req, res) => {
 // добавить новую скульптуру (title + несколько файлов)
 app.post(
   "/api/sculptures",
-  upload.array("images", 20), // "images" — имя поля в FormData
+  upload.array("images", 20),
   (req, res) => {
-    const { title } = req.body;
+    // ТУТ МЫ БЕРЁМ description ИЗ ФОРМЫ
+    const { title, description = "" } = req.body;
     const files = req.files || [];
 
     if (!title || files.length === 0) {
@@ -57,16 +58,22 @@ app.post(
         .json({ error: "title and at least one image file required" });
     }
 
-    // формируем URL для каждой загруженной картинки
+    // формируем URL для картинок
     const imageUrls = files.map((file) => {
-      // ссылка, по которой фронт сможет получить картинку
       return `http://localhost:${PORT}/uploads/${file.filename}`;
     });
 
-    const created = sculpturesStore.addSculpture(title, imageUrls);
+    // СЮДА ПРОБРАСЫВАЕМ description
+    const created = sculpturesStore.addSculpture(
+      title,
+      description,
+      imageUrls
+    );
+
     res.status(201).json(created);
   }
 );
+
 
 // удалить скульптуру
 app.delete("/api/sculptures/:id", (req, res) => {
